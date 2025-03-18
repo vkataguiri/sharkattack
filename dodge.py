@@ -34,6 +34,12 @@ buttons = [
     {"text": "Quit Game", "rect": Rect(270, 360, 250, 50), "action": "quit_game", "type": "game_over"},
 ]
 
+# Shark animation frames
+shark_anim_frames = ["shark001.png", "shark002.png"]
+shark_anim_index = 0
+shark_anim_delay = 0.1
+shark_anim_timer = 0
+
 diff_scheduled = False
 
 def draw_menu():
@@ -72,7 +78,7 @@ def draw():
         draw_game_over()
 
 def update():
-    global time_survived, difficulty_mod, diff_scheduled
+    global time_survived, difficulty_mod, diff_scheduled, shark_anim_delay, shark_anim_timer
 
     if game_state == PLAYING:
         if not diff_scheduled:
@@ -93,6 +99,17 @@ def update():
         check_collision()
 
         time_survived += 1 / 60
+
+        # Update shark animation
+        shark_anim_timer += 1 / 60
+        if shark_anim_timer >= shark_anim_delay:
+            shark_anim_timer = 0
+            update_shark_animation()
+
+def update_shark_animation():
+    for shark in sharks:
+        shark["frame_index"] = (shark["frame_index"] + 1) % len(shark_anim_frames)
+        shark["actor"].image = shark_anim_frames[shark["frame_index"]]
 
 # Check if player clicked the button
 def on_mouse_down(pos):
@@ -148,7 +165,8 @@ def shark_spawn():
     side = random.randint(1, 4)
     shark = {
         "speed": random.randint(MIN_SHARK_SPEED, MAX_SHARK_SPEED),
-        "actor": Actor("shark001.png"),
+        "actor": Actor(shark_anim_frames[0]),
+        "frame_index": 0
     }
 
     match side:
