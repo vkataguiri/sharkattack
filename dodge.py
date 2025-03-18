@@ -34,10 +34,10 @@ buttons = [
     {"text": "Quit Game", "rect": Rect(270, 360, 250, 50), "action": "quit_game", "type": "game_over"},
 ]
 
-# Shark animation frames
+# Shark animation
 shark_anim_frames = ["shark001.png", "shark002.png"]
 shark_anim_index = 0
-shark_anim_delay = 0.1
+shark_anim_delay = 0.2
 shark_anim_timer = 0
 
 diff_scheduled = False
@@ -84,6 +84,11 @@ def update():
         if not diff_scheduled:
             diff_scheduled = True
             clock.schedule_interval(increase_difficulty, 1)
+
+        if player.bottom >= HEIGHT:
+            player.bottom = HEIGHT
+        if player.top <= 0:
+            player.top = 0
 
         # Handle player movement
         player_movement()
@@ -139,18 +144,10 @@ def handle_button_click(action):
 
 def shark_controller():
     for shark in sharks:
-        match shark["actor"].angle:
-            case 0:
-                shark["actor"].x -= shark["speed"]
-            case 180:
-                shark["actor"].x += shark["speed"]
-            case 270:
-                shark["actor"].y -= shark["speed"]
-            case 90:
-                shark["actor"].y += shark["speed"]
+        shark["actor"].x -= shark["speed"]
 
         # Remove shark if it's out of screen
-        if shark["actor"].x < -50 or shark["actor"].x > 850 or shark["actor"].y < -50 or shark["actor"].y > 650:
+        if shark["actor"].x < -50:
             sharks.remove(shark)
 
 def check_collision():
@@ -162,30 +159,15 @@ def check_collision():
         game_state = GAME_OVER
 
 def shark_spawn():
-    side = random.randint(1, 4)
     shark = {
         "speed": random.randint(MIN_SHARK_SPEED, MAX_SHARK_SPEED),
         "actor": Actor(shark_anim_frames[0]),
         "frame_index": 0
     }
 
-    match side:
-        case 1:
-            shark["actor"].x = 850
-            shark["actor"].angle = 0
-            shark["actor"].y = random.randint(0, 600)
-        case 2:
-            shark["actor"].x = -50
-            shark["actor"].angle = 180
-            shark["actor"].y = random.randint(0, 600)
-        case 3:
-            shark["actor"].y = 650
-            shark["actor"].angle = 270
-            shark["actor"].x = random.randint(0, 800)
-        case 4:
-            shark["actor"].y = -50
-            shark["actor"].angle = 90
-            shark["actor"].x = random.randint(0, 800)
+    shark["actor"].x = 850
+    shark["actor"].angle = 0
+    shark["actor"].y = random.randint(0, 600)
 
     sharks.append(shark)
 
