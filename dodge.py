@@ -52,14 +52,16 @@ exp_anim_frames = [
     "explosion007.png", "explosion008.png", "explosion009.png", "explosion010.png",
 ]
 exp_anim_index = 0
-exp_anim_delay = 0.3
+exp_anim_delay = 0.05
 exp_anim_timer = 0
+explosion_playing = False
 
 sound_volume = 0.1
 sounds_enabled = True
 playing_music = False
 
 diff_scheduled = False
+can_move = False
 
 def draw_menu():
     # Title
@@ -76,6 +78,7 @@ def draw_game():
     bg1.draw()
     bg2.draw()
     player.draw()
+    if explosion_playing: explosion.draw()
     screen.draw.text('Time survived: ' + str(round(time_survived)), (15, 10), color=(255, 255, 255), fontsize=30)
     for shark in sharks:
         shark["actor"].draw()
@@ -98,11 +101,11 @@ def draw():
         draw_game_over()
 
 def update():
-    global time_survived, difficulty_mod, diff_scheduled, shark_anim_delay, shark_anim_timer, playing_music
+    global time_survived, difficulty_mod, diff_scheduled, shark_anim_delay, shark_anim_timer, playing_music, explosion_playing, game_state, exp_anim_index, exp_anim_timer, can_move
     if game_state == MENU:
         play_music("menumusic.wav", sound_volume)
 
-    if game_state == PLAYING:
+    if game_state == PLAYING and can_move:
         play_music("gamemusic.wav", sound_volume)
 
         # Infinite background effect
@@ -144,14 +147,24 @@ def update():
             shark_anim_timer = 0
             update_shark_animation()
 
+    # Update explosion animation when Game Over
+    if explosion_playing:
+        exp_anim_timer += 1 / 60
+        if exp_anim_timer >= exp_anim_delay:
+            exp_anim_timer = 0
+            exp_anim_index += 1
+            if exp_anim_index >= len(exp_anim_frames):
+                explosion_playing = False
+                game_state = GAME_OVER
+                music.stop()
+                playing_music = False
+            else:
+                explosion.image = exp_anim_frames[exp_anim_index]
+
 def update_shark_animation():
     for shark in sharks:
         shark["frame_index"] = (shark["frame_index"] + 1) % len(shark_anim_frames)
         shark["actor"].image = shark_anim_frames[shark["frame_index"]]
-
-def update_explosion_animation():
-    exp_anim_index = (exp_anim_index + 1) % len(exp_anim_frames)
-    explosion.image = exp_anim_frames[exp_anim_index]
 
 def play_music(song, volume):
     global playing_music
@@ -174,10 +187,13 @@ def iterate_buttons(type, pos):
             handle_button_click(button["action"])
 
 def handle_button_click(action):
-    global game_state, sharks, player, time_survived, shark_spawn_rate, diff_scheduled, sounds_enabled, playing_music
+    global game_state, sharks, player, time_survived, shark_spawn_rate, diff_scheduled, sounds_enabled, playing_music, can_move
     if sounds_enabled:
         sounds.button_click.play()
     if action == "start_game":
+        can_move = True
+        # Take explosion off screen
+        explosion.pos = WIDTH + 100, HEIGHT + 100
         music.stop()
         playing_music = False
         shark_spawn_rate = INITIAL_SPAWN_RATE
@@ -204,17 +220,18 @@ def shark_controller():
             sharks.remove(shark)
 
 def check_collision():
-    global game_state, playing_music
+    global game_state, playing_music, exp_anim_index, explosion_playing, can_move
     shark_actors = []
     for shark in sharks:
         shark_actors.append(shark["actor"])
-    if player.collidelist(shark_actors) != -1:
-        # Player collided with a shark
-        music.stop()
-        playing_music = False
+    if player.collidelist(shark_actors) != -1: # Player collided with a shark
+        can_move = False
+        # Play explosion animation
         if sounds_enabled: sounds.explosion.play()
-
-        game_state = GAME_OVER
+        explosion.pos = player.pos
+        explosion_playing = True
+        exp_anim_index = 0
+        explosion.image = exp_anim_frames[exp_anim_index]
 
 def shark_spawn():
     shark = {
