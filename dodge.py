@@ -34,7 +34,7 @@ sharks = []
 buttons = [
     {"text": "Play", "rect": Rect(270, 200, 250, 50), "action": "start_game", "type": "menu"},
     {"text": "Quit", "rect": Rect(270, 300, 250, 50), "action": "quit_game", "type": "menu"},
-    {"text": "Sounds", "rect": Rect(500, 500, 250, 50), "action": "switch_sounds", "type": "menu"},
+    {"text": "Sound: ON", "rect": Rect(500, 500, 250, 50), "action": "switch_sounds", "type": "menu"},
     {"text": "Try again?", "rect": Rect(270, 280, 250, 50), "action": "start_game", "type": "game_over"},
     {"text": "Quit Game", "rect": Rect(270, 360, 250, 50), "action": "quit_game", "type": "game_over"},
 ]
@@ -72,7 +72,14 @@ def draw_menu():
     for button in buttons:
         if button["type"] == "menu":
             screen.draw.filled_rect(button["rect"], (34, 212, 70))
-            screen.draw.text(button["text"], (button["rect"].center[0] - 26, button["rect"].center[1] - 12), fontsize=40, color=(255, 255, 255))
+            if button["action"] == "switch_sounds":
+                if sounds_enabled:
+                    button["text"] = "Sounds: ON"
+                else:
+                    button["text"] = "Sounds: OFF"
+                screen.draw.text(button["text"], (button["rect"].center[0] - 75, button["rect"].center[1] - 12), fontsize=40, color=(255, 255, 255))
+            else:
+                screen.draw.text(button["text"], (button["rect"].center[0] - 26, button["rect"].center[1] - 12), fontsize=40, color=(255, 255, 255))
 
 def draw_game():
     bg1.draw()
@@ -117,14 +124,18 @@ def update():
         if bg2.right <= 0:
             bg2.left = WIDTH
 
+        # Difficulty manager
         if not diff_scheduled:
             diff_scheduled = True
             clock.schedule_interval(increase_difficulty, 1)
 
+        # Prevent player from going off screen
         if player.bottom >= HEIGHT:
             player.bottom = HEIGHT
         if player.top <= 0:
             player.top = 0
+        if player.left <= 0:
+            player.left = 0
 
         # Handle player movement
         player_movement()
