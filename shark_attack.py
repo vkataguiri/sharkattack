@@ -66,7 +66,7 @@ can_move = False
 def draw_menu():
     # Title
     screen.draw.filled_rect(Rect(0, 0, WIDTH, HEIGHT), (34, 176, 212)) # Background
-    screen.draw.text("Shark Attack", (260, 100), fontsize=60, color=(255, 255, 255))
+    screen.draw.text("SHARK ATTACK!", (230, 100), fontsize=60, color=(255, 255, 255))
 
     # Buttons
     for button in buttons:
